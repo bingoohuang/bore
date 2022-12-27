@@ -114,6 +114,15 @@ impl Client {
         }
         remote_conn.send(ClientMessage::Accept(id)).await?;
         let mut local_conn = connect_with_timeout(&self.local_host, self.local_port).await?;
+        let local_addr = local_conn.local_addr().unwrap();
+        let peer_addr = local_conn.peer_addr().unwrap();
+        info!(
+            "conn: {}:{} -> {}:{}",
+            local_addr.ip(),
+            local_addr.port(),
+            peer_addr.ip(),
+            peer_addr.port()
+        );
         let parts = remote_conn.into_parts();
         debug_assert!(parts.write_buf.is_empty(), "framed write buffer not empty");
         local_conn.write_all(&parts.read_buf).await?; // mostly of the cases, this will be empty

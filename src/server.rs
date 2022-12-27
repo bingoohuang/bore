@@ -13,12 +13,15 @@ use tracing::{info, info_span, warn, Instrument};
 use uuid::Uuid;
 
 use crate::auth::Authenticator;
-use crate::shared::{proxy, ClientMessage, Delimited, ServerMessage, CONTROL_PORT};
+use crate::shared::{proxy, ClientMessage, Delimited, ServerMessage};
 
 /// State structure for the server.
 pub struct Server {
     /// The minimum TCP port that can be forwarded.
     min_port: u16,
+
+    /// TCP port used for control connections with the server.
+    control_port: u16,
 
     /// Optional secret used to authenticate clients.
     auth: Option<Authenticator>,
@@ -29,9 +32,10 @@ pub struct Server {
 
 impl Server {
     /// Create a new server with a specified minimum port number.
-    pub fn new(min_port: u16, secret: Option<&str>) -> Self {
+    pub fn new(min_port: u16, control_port: u16, secret: Option<&str>) -> Self {
         Server {
             min_port,
+            control_port,
             conns: Arc::new(DashMap::new()),
             auth: secret.map(Authenticator::new),
         }
@@ -40,7 +44,7 @@ impl Server {
     /// Start the server, listening for new connections.
     pub async fn listen(self) -> Result<()> {
         let this = Arc::new(self);
-        let addr = SocketAddr::from(([0, 0, 0, 0], CONTROL_PORT));
+        let addr = SocketAddr::from(([0, 0, 0, 0], this.control_port));
         let listener = TcpListener::bind(&addr).await?;
         info!(?addr, "server listening");
 
@@ -143,6 +147,6 @@ impl Server {
 
 impl Default for Server {
     fn default() -> Self {
-        Server::new(1024, None)
+        Server::new(1024, 7835, None)
     }
 }

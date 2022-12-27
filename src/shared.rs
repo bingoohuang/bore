@@ -13,10 +13,7 @@ use tokio_util::codec::{AnyDelimiterCodec, Framed, FramedParts};
 use tracing::trace;
 use uuid::Uuid;
 
-/// TCP port used for control connections with the server.
-pub const CONTROL_PORT: u16 = 7835;
-
-/// Maxmium byte length for a JSON frame in the stream.
+/// Maximum byte length for a JSON frame in the stream.
 pub const MAX_FRAME_LENGTH: usize = 256;
 
 /// Timeout for network connections and initial protocol messages.

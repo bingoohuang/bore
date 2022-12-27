@@ -28,6 +28,10 @@ enum Command {
         #[clap(short, long, default_value_t = 0)]
         port: u16,
 
+        /// TCP port used for control connections with the server.
+        #[clap(short, long, default_value_t = 7835)]
+        control_port: u16,
+
         /// Optional secret for authentication.
         #[clap(short, long, env = "BORE_SECRET", hide_env_values = true)]
         secret: Option<String>,
@@ -38,6 +42,10 @@ enum Command {
         /// Minimum TCP port number to accept.
         #[clap(long, default_value_t = 1024)]
         min_port: u16,
+
+        /// TCP port used for control connections with the server.
+        #[clap(short, long, default_value_t = 7835)]
+        control_port: u16,
 
         /// Optional secret for authentication.
         #[clap(short, long, env = "BORE_SECRET", hide_env_values = true)]
@@ -53,13 +61,28 @@ async fn run(command: Command) -> Result<()> {
             local_port,
             to,
             port,
+            control_port,
             secret,
         } => {
-            let client = Client::new(&local_host, local_port, &to, port, secret.as_deref()).await?;
+            let client = Client::new(
+                &local_host,
+                local_port,
+                control_port,
+                &to,
+                port,
+                secret.as_deref(),
+            )
+            .await?;
             client.listen().await?;
         }
-        Command::Server { min_port, secret } => {
-            Server::new(min_port, secret.as_deref()).listen().await?;
+        Command::Server {
+            min_port,
+            control_port,
+            secret,
+        } => {
+            Server::new(min_port, control_port, secret.as_deref())
+                .listen()
+                .await?;
         }
     }
 
